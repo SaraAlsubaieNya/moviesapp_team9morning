@@ -31,7 +31,6 @@ struct moviescenter: View {
                             .padding(.trailing, 20)
                     }
                     
-                    // Search bar
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.gray)
@@ -68,13 +67,11 @@ struct moviescenter: View {
                         }
                         .padding()
                     } else {
-                        // High Rated Section
                         if let highRated = highRatedMovie {
                             HighRatedSection(movie: highRated)
                                 .padding(.top, 0)
                         }
                         
-                        // Drama Section
                         if !dramaMovies.isEmpty {
                             SectionView(
                                 section: "Drama",
@@ -83,7 +80,6 @@ struct moviescenter: View {
                                 onShowMore: { showingGenre = GenreSheet(id: "Drama") }
                             )
                         }
-                        // Comedy Section
                         if !comedyMovies.isEmpty {
                             SectionView(
                                 section: "Comedy",
@@ -118,7 +114,6 @@ struct moviescenter: View {
         }
     }
     
-    // MARK: - Movie Filtering
     var highRatedMovie: Movie? {
         filteredMovies.max { ($0.rating ?? 0) < ($1.rating ?? 0) }
     }
@@ -145,7 +140,6 @@ struct moviescenter: View {
     }
 }
 
-// MARK: - SectionView
 struct SectionView: View {
     let section: String
     let movies: [Movie]
@@ -214,7 +208,6 @@ struct SectionView: View {
     }
 }
 
-// MARK: - GenreFullListView
 struct GenreFullListView: View, Identifiable {
     let id = UUID()
     let genre: String
@@ -222,61 +215,73 @@ struct GenreFullListView: View, Identifiable {
     
     @Environment(\.dismiss) private var dismiss
     
+    let columns = [
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14)
+    ]
+    
     var body: some View {
         NavigationView {
-            ScrollView(.horizontal, showsIndicators: true) {
-                HStack(spacing: 14) {
-                    ForEach(movies) { movie in
-                        VStack(alignment: .leading, spacing: 8) {
-                            if let url = movie.imageURL {
-                                AsyncImage(url: url) { phase in
-                                    if let image = phase.image {
-                                        image
-                                            .resizable()
-                                            .aspectRatio(2/3, contentMode: .fill)
-                                    } else if phase.error != nil {
-                                        Color.gray.opacity(0.2)
-                                            .overlay(
-                                                Image(systemName: "photo")
-                                                    .font(.title2)
-                                                    .foregroundStyle(.secondary)
-                                            )
-                                    } else {
-                                        ProgressView()
+            ZStack {
+                Color(hex: "#181818")
+                    .ignoresSafeArea()
+                
+                ScrollView(showsIndicators: true) {
+                    LazyVGrid(columns: columns, spacing: 20) {
+                        ForEach(movies) { movie in
+                            VStack(alignment: .leading, spacing: 8) {
+                                if let url = movie.imageURL {
+                                    AsyncImage(url: url) { phase in
+                                        if let image = phase.image {
+                                            image
+                                                .resizable()
+                                                .aspectRatio(2/3, contentMode: .fill)
+                                        } else if phase.error != nil {
+                                            Color.gray.opacity(0.2)
+                                                .overlay(
+                                                    Image(systemName: "photo")
+                                                        .font(.title2)
+                                                        .foregroundStyle(.secondary)
+                                                )
+                                        } else {
+                                            ProgressView()
+                                        }
                                     }
-                                }
-                                .frame(width: 170, height: 230)
-                                .cornerRadius(10)
-                                .clipped()
-                            } else {
-                                Color.gray.opacity(0.2)
-                                    .frame(width: 170, height: 230)
+                                    .frame(height: 230)
                                     .cornerRadius(10)
-                                    .overlay(
-                                        Image(systemName: "photo")
-                                            .font(.title2)
-                                            .foregroundStyle(.secondary)
-                                    )
+                                    .clipped()
+                                } else {
+                                    Color.gray.opacity(0.2)
+                                        .frame(height: 230)
+                                        .cornerRadius(10)
+                                        .overlay(
+                                            Image(systemName: "photo")
+                                                .font(.title2)
+                                                .foregroundStyle(.secondary)
+                                        )
+                                }
+                                Text(movie.title)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .lineLimit(2)
                             }
-                            Text(movie.title)
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.white)
                         }
-                        .frame(width: 170)
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
             }
-            .background(Color(hex: "#181818").ignoresSafeArea())
             .navigationTitle(genre)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", action: { dismiss() })
-                        .foregroundColor(.yellow)
+                        .foregroundColor(Color(hex: "#F4CB43"))
                 }
             }
+            .toolbarBackground(Color(hex: "#181818"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }
