@@ -1,6 +1,5 @@
 import SwiftUI
 
-
 struct GenreSheet: Identifiable, Equatable {
     let id: String
 }
@@ -10,7 +9,6 @@ struct moviescenter: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var searchText: String = ""
-    
     
     @State private var showingGenre: GenreSheet? = nil
     
@@ -24,7 +22,6 @@ struct moviescenter: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
                     
-                   
                     HStack {
                         Spacer()
                         Text("Movies Center")
@@ -54,9 +51,22 @@ struct moviescenter: View {
                     if isLoading {
                         ProgressView().padding()
                     } else if let errorMessage = errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .padding()
+                        VStack(spacing: 10) {
+                            Text("Error Loading Movies")
+                                .foregroundColor(.red)
+                                .font(.headline)
+                            Text(errorMessage)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                                .multilineTextAlignment(.center)
+                            Button("Retry") {
+                                Task {
+                                    await loadMovies()
+                                }
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        .padding()
                     } else {
                         // High Rated Section
                         if let highRated = highRatedMovie {
@@ -128,13 +138,14 @@ struct moviescenter: View {
             movies = try await MoviesAPI.fetchMovies()
             isLoading = false
         } catch {
-            errorMessage = "Failed to load movies."
+            errorMessage = "Error: \(error.localizedDescription)"
             isLoading = false
+            print("DEBUG: Full error: \(error)")
         }
     }
 }
 
-// MARK: - SectionView: Horizontal Scroll, 3 movies, Show More
+// MARK: - SectionView
 struct SectionView: View {
     let section: String
     let movies: [Movie]
@@ -203,7 +214,7 @@ struct SectionView: View {
     }
 }
 
-// MARK: - GenreFullListView: Modal for all movies of one genre
+// MARK: - GenreFullListView
 struct GenreFullListView: View, Identifiable {
     let id = UUID()
     let genre: String
@@ -269,7 +280,6 @@ struct GenreFullListView: View, Identifiable {
         }
     }
 }
-
 
 struct HighRatedSection: View {
     let movie: Movie
@@ -360,7 +370,6 @@ struct HighRatedSection: View {
         }
     }
 }
-
 
 extension Color {
     init(hex: String) {
