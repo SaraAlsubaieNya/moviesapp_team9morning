@@ -9,6 +9,7 @@ struct moviescenter: View {
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var searchText: String = ""
+    @State private var currentHighRatedIndex = 0
     
     @State private var showingGenre: GenreSheet? = nil
     
@@ -22,14 +23,20 @@ struct moviescenter: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 28) {
                     
-                    HStack {
+                    HStack(spacing: 12) {
                         Spacer()
                         Text("Movies Center")
-                            .font(.system(size: 32, weight: .bold))
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(.top, 10)
-                            .padding(.trailing, 20)
+                        
+                        Image("icon")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 36, height: 36)
+                            .clipShape(Circle())
                     }
+                    .padding(.top, 10)
+                    .padding(.trailing, 20)
                     
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
@@ -67,9 +74,12 @@ struct moviescenter: View {
                         }
                         .padding()
                     } else {
-                        if let highRated = highRatedMovie {
-                            HighRatedSection(movie: highRated)
-                                .padding(.top, 0)
+                        if !highRatedMovies.isEmpty {
+                            HighRatedSection(
+                                movies: highRatedMovies,
+                                currentIndex: $currentHighRatedIndex
+                            )
+                            .padding(.top, 0)
                         }
                         
                         if !dramaMovies.isEmpty {
@@ -114,8 +124,8 @@ struct moviescenter: View {
         }
     }
     
-    var highRatedMovie: Movie? {
-        filteredMovies.max { ($0.rating ?? 0) < ($1.rating ?? 0) }
+    var highRatedMovies: [Movie] {
+        filteredMovies.sorted { ($0.rating ?? 0) > ($1.rating ?? 0) }.prefix(5).map { $0 }
     }
     
     var dramaMovies: [Movie] {
@@ -170,7 +180,7 @@ struct SectionView: View {
                                     if let image = phase.image {
                                         image
                                             .resizable()
-                                            .aspectRatio(2/3, contentMode: .fill)
+                                            .aspectRatio(contentMode: .fill)
                                     } else if phase.error != nil {
                                         Color.gray.opacity(0.2)
                                             .overlay(
@@ -198,6 +208,8 @@ struct SectionView: View {
                             Text(movie.title)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
+                                .lineLimit(1)
+                                .frame(width: 155)
                         }
                         .frame(width: 155)
                     }
@@ -235,9 +247,12 @@ struct GenreFullListView: View, Identifiable {
                                         if let image = phase.image {
                                             image
                                                 .resizable()
-                                                .aspectRatio(2/3, contentMode: .fill)
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(height: 230)
+                                                .clipped()
                                         } else if phase.error != nil {
                                             Color.gray.opacity(0.2)
+                                                .frame(height: 230)
                                                 .overlay(
                                                     Image(systemName: "photo")
                                                         .font(.title2)
@@ -245,11 +260,11 @@ struct GenreFullListView: View, Identifiable {
                                                 )
                                         } else {
                                             ProgressView()
+                                                .frame(height: 230)
                                         }
                                     }
                                     .frame(height: 230)
                                     .cornerRadius(10)
-                                    .clipped()
                                 } else {
                                     Color.gray.opacity(0.2)
                                         .frame(height: 230)
@@ -287,86 +302,102 @@ struct GenreFullListView: View, Identifiable {
 }
 
 struct HighRatedSection: View {
-    let movie: Movie
+    let movies: [Movie]
+    @Binding var currentIndex: Int
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("High Rated")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 20)
-            ZStack(alignment: .bottomLeading) {
-                if let url = movie.imageURL {
-                    AsyncImage(url: url) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .aspectRatio(16/9, contentMode: .fill)
-                        } else if phase.error != nil {
+            
+            TabView(selection: $currentIndex) {
+                ForEach(Array(movies.enumerated()), id: \.element.id) { index, movie in
+                    ZStack(alignment: .bottomLeading) {
+                        if let url = movie.imageURL {
+                            AsyncImage(url: url) { phase in
+                                if let image = phase.image {
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(height: 220)
+                                        .clipped()
+                                } else if phase.error != nil {
+                                    Color.gray.opacity(0.2)
+                                        .frame(height: 220)
+                                        .overlay(
+                                            Image(systemName: "photo")
+                                                .font(.title2)
+                                                .foregroundStyle(.secondary)
+                                        )
+                                } else {
+                                    ProgressView()
+                                        .frame(height: 220)
+                                }
+                            }
+                            .frame(height: 220)
+                        } else {
                             Color.gray.opacity(0.2)
+                                .frame(height: 220)
                                 .overlay(
                                     Image(systemName: "photo")
                                         .font(.title2)
                                         .foregroundStyle(.secondary)
                                 )
-                        } else {
-                            ProgressView()
                         }
-                    }
-                    .frame(height: 220)
-                    .clipped()
-                } else {
-                    Color.gray.opacity(0.2)
-                        .frame(height: 220)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.title2)
-                                .foregroundStyle(.secondary)
+                        
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.black.opacity(0.05), Color.black.opacity(0.90)]),
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
-                }
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.black.opacity(0.05), Color.black.opacity(0.90)]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 100)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(movie.title)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.white)
-                    HStack(spacing: 10) {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(Color(hex: "#F4CB43"))
-                            .font(.system(size: 14))
-                        Text(String(format: "%.1f", movie.rating ?? 0))
-                            .foregroundColor(.white)
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("out of 5")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 14))
+                        .frame(height: 100)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(movie.title)
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.white)
+                            HStack(spacing: 10) {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(Color(hex: "#F4CB43"))
+                                    .font(.system(size: 14))
+                                Text(String(format: "%.1f", movie.rating ?? 0))
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text("out of 5")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            }
+                            if let genre = movie.genreText, let duration = movie.duration {
+                                Text("\(genre), \(duration)")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            } else if let genre = movie.genreText {
+                                Text(genre)
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            } else if let duration = movie.duration {
+                                Text(duration)
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            }
+                        }
+                        .padding(18)
                     }
-                    if let genre = movie.genreText, let duration = movie.duration {
-                        Text("\(genre), \(duration)")
-                            .foregroundColor(.gray)
-                            .font(.system(size: 14))
-                    } else if let genre = movie.genreText {
-                        Text(genre)
-                            .foregroundColor(.gray)
-                            .font(.system(size: 14))
-                    } else if let duration = movie.duration {
-                        Text(duration)
-                            .foregroundColor(.gray)
-                            .font(.system(size: 14))
-                    }
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
+                    .cornerRadius(8)
+                    .tag(index)
                 }
-                .padding(18)
             }
-            .padding(.horizontal, 20)
-            .frame(maxWidth: .infinity)
-            .cornerRadius(8)
+            .frame(height: 220)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            
             HStack(spacing: 6) {
-                ForEach(0..<5) { idx in
+                ForEach(Array(movies.prefix(5).indices), id: \.self) { idx in
                     Circle()
-                        .fill(idx == 0 ? Color.white : Color.white.opacity(0.2))
+                        .fill(idx == currentIndex ? Color.white : Color.white.opacity(0.2))
                         .frame(width: 7, height: 7)
                 }
             }
