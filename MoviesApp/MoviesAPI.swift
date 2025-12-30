@@ -51,7 +51,8 @@ enum MoviesAPI {
     
     static func fetchMovies() async throws -> [Movie] {
         var request = URLRequest(url: baseURL)
-        request.setValue(apiKey, forHTTPHeaderField: "Authorization")
+        // Fix: Add "Bearer " prefix to the API key
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         let (data, _) = try await URLSession.shared.data(for: request)
         let decoded = try JSONDecoder().decode(AirtableMoviesResponse.self, from: data)
         return decoded.records.map(Movie.init(from:))
