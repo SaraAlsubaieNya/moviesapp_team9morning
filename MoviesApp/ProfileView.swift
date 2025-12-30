@@ -11,17 +11,10 @@
 import SwiftUI
 
 struct ProfileView: View {
-    struct SavedMovie: Identifiable, Hashable {
-        let id = UUID()
-        let title: String
-        let imageName: String
-    }
-
-    private let savedMovies: [SavedMovie] = [
-        .init(title: "World's Greatest Dad", imageName: "image 3"),
-        .init(title: "The Shawshank Redemption", imageName: "image 3"),
-        .init(title: "A Star Is Born", imageName: "image 3")
-    ]
+    // استبدل المصفوفة الثابتة ببيانات ديناميكية من API
+    @State private var movies: [Movie] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
 
     private let gridSpacing: CGFloat = 12
     private let cornerRadius: CGFloat = 10
@@ -82,33 +75,57 @@ struct ProfileView: View {
                         .foregroundStyle(.primary)
                         .padding(.horizontal, horizontalPadding)
 
-                    let columns = Array(
-                        repeating: GridItem(.fixed(fixedItemWidth), spacing: gridSpacing, alignment: .top),
-                        count: columnsCount
-                    )
+                    if isLoading {
+                        ProgressView()
+                            .padding(.horizontal, horizontalPadding)
+                    } else if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, horizontalPadding)
+                    } else {
+                        let columns = Array(
+                            repeating: GridItem(.fixed(fixedItemWidth), spacing: gridSpacing, alignment: .top),
+                            count: columnsCount
+                        )
 
-                    LazyVGrid(columns: columns, alignment: .leading, spacing: gridSpacing) {
-                        ForEach(savedMovies) { movie in
-                            ZStack {
-                                if let uiImage = UIImage(named: movie.imageName) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                } else {
-                                    Color.gray.opacity(0.2)
-                                        .overlay(
-                                            Image(systemName: "photo")
-                                                .font(.title2)
-                                                .foregroundStyle(.secondary)
-                                        )
+                        LazyVGrid(columns: columns, alignment: .leading, spacing: gridSpacing) {
+                            // اختر subset لو تبغى (مثلاً أول 6)
+                            ForEach(Array(movies.prefix(6))) { movie in
+                                ZStack {
+                                    if let url = movie.imageURL {
+                                        AsyncImage(url: url) { phase in
+                                            if let image = phase.image {
+                                                image
+                                                    .resizable()
+                                                    .scaledToFill()
+                                            } else if phase.error != nil {
+                                                Color.gray.opacity(0.2)
+                                                    .overlay(
+                                                        Image(systemName: "photo")
+                                                            .font(.title2)
+                                                            .foregroundStyle(.secondary)
+                                                    )
+                                            } else {
+                                                ProgressView()
+                                            }
+                                        }
+                                    } else {
+                                        Color.gray.opacity(0.2)
+                                            .overlay(
+                                                Image(systemName: "photo")
+                                                    .font(.title2)
+                                                    .foregroundStyle(.secondary)
+                                            )
+                                    }
                                 }
+                                .frame(width: fixedItemWidth, height: fixedItemHeight)
+                                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                                .contentShape(Rectangle())
+                                .accessibilityLabel(Text(movie.title))
                             }
-                            .frame(width: fixedItemWidth, height: fixedItemHeight)
-                            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                            .contentShape(Rectangle())
                         }
+                        .padding(.horizontal, horizontalPadding)
                     }
-                    .padding(.horizontal, horizontalPadding)
                 }
             }
             .padding(.bottom, 24)
@@ -116,17 +133,26 @@ struct ProfileView: View {
         .background(Color(.systemBackground))
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
+        .task {
+            await loadMovies()
+        }
+    }
+
+    // MARK: - Data Loading
+    private func loadMovies() async {
+        do {
+            isLoading = true
+            errorMessage = nil
+            movies = try await MoviesAPI.fetchMovies()
+            isLoading = false
+        } catch {
+            errorMessage = "Failed to load movies."
+            isLoading = false
+        }
     }
 }
 
 #Preview {
-    NavigationStack {
-        VStack {
-            NavigationLink("Open Profile") {
+ 
                 ProfileView()
-            }
-            .padding()
-        }
-        .navigationTitle("Home")
-    }
 }
