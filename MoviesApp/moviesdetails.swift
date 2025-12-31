@@ -1,17 +1,44 @@
 import SwiftUI
 
 struct moviedetails: View {
+    let movie: Movie
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 // الهيدر
                 ZStack(alignment: .bottom) {
-                    Image("showshankscover")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 500)
-                        .clipped()
-                        .ignoresSafeArea(edges: .top)
+                    if let imageURL = movie.imageURL {
+                        AsyncImage(url: imageURL) { phase in
+                            if let image = phase.image {
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(height: 500)
+                                    .clipped()
+                                    .ignoresSafeArea(edges: .top)
+                            } else if phase.error != nil {
+                                Color.gray.opacity(0.3)
+                                    .frame(height: 500)
+                                    .overlay(
+                                        Image(systemName: "photo")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.gray)
+                                    )
+                                    .ignoresSafeArea(edges: .top)
+                            } else {
+                                ProgressView()
+                                    .frame(height: 500)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.gray.opacity(0.3))
+                                    .ignoresSafeArea(edges: .top)
+                            }
+                        }
+                    } else {
+                        Color.gray.opacity(0.3)
+                            .frame(height: 500)
+                            .ignoresSafeArea(edges: .top)
+                    }
 
                     LinearGradient(
                         gradient: Gradient(colors: [
@@ -25,7 +52,7 @@ struct moviedetails: View {
                     .frame(height: 100)
 
                     HStack {
-                        Text("Showshank")
+                        Text(movie.title)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.leading, 20)
@@ -40,9 +67,9 @@ struct moviedetails: View {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Duration").foregroundColor(.white).font(.system(size: 18, weight: .semibold))
-                            Text("2 hours 22 mins").foregroundColor(.gray).font(.system(size: 15))
+                            Text(movie.duration ?? "N/A").foregroundColor(.gray).font(.system(size: 15))
                             Text("Genre").foregroundColor(.white).font(.system(size: 18, weight: .semibold))
-                            Text("Drama").foregroundColor(.gray).font(.system(size: 15))
+                            Text(movie.genres.joined(separator: ", ")).foregroundColor(.gray).font(.system(size: 15))
                         }
                         Spacer()
                         VStack(alignment: .leading, spacing: 10) {
@@ -64,7 +91,7 @@ struct moviedetails: View {
                     // التقييم
                     VStack(alignment: .leading, spacing: 10) {
                         Text("IMDb Rating").foregroundColor(.white).font(.system(size: 18, weight: .semibold))
-                        Text("9.3 / 10").foregroundColor(.gray).font(.system(size: 15))
+                        Text(String(format: "%.1f / 10", movie.rating ?? 0)).foregroundColor(.gray).font(.system(size: 15))
                         Divider().background(Color.gray)
                         
                         // الدايركتور
@@ -92,7 +119,7 @@ struct moviedetails: View {
                     // التقييم
                     VStack {
                         Text("Rating & Reviews").foregroundColor(.white).font(.system(size: 18, weight: .semibold))
-                        Text("4.8").foregroundColor(.gray).font(.system(size: 39, weight: .medium))
+                        Text(String(format: "%.1f", (movie.rating ?? 0) / 2)).foregroundColor(.gray).font(.system(size: 39, weight: .medium))
                         Text("out of 5").foregroundColor(.gray).font(.system(size: 15))
                     }
                 }
@@ -133,7 +160,7 @@ struct moviedetails: View {
             }
             .padding(.horizontal, 10)
             .background(Color.black.ignoresSafeArea())
-            .navigationBarTitle("Shawshank", displayMode: .inline)
+            .navigationBarTitle(movie.title, displayMode: .inline)
             .toolbarBackground(Color("navigationbar"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
@@ -226,6 +253,14 @@ struct moviedetails: View {
 }
 
 #Preview {
-    moviedetails()
-        .preferredColorScheme(.dark)
+    // Example preview with mock data
+    moviedetails(movie: Movie(
+        id: "1",
+        title: "The Shawshank Redemption",
+        imageURL: URL(string: "https://example.com/image.jpg"),
+        genres: ["Drama"],
+        rating: 9.3,
+        duration: "2h 22min"
+    ))
+    .preferredColorScheme(.dark)
 }
