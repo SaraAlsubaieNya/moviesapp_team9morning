@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct movieView: View {
+struct moviedetails: View {
     var body: some View {
         NavigationView {
             ScrollView {
@@ -108,6 +108,28 @@ struct movieView: View {
                     .padding(.horizontal, 20)
                 }
                 .frame(height: 200)
+                
+                NavigationLink(destination: AddReviewView()) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 20))
+                        
+                        Text("Write a review")
+                            .font(.system(size: 18, weight: .medium))
+                    }
+                    .foregroundColor(Color("bookmark"))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color("bookmark"), lineWidth: 2)
+                    )
+                    .cornerRadius(12)
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
+                .padding(.bottom, 30)
             }
             .padding(.horizontal, 10)
             .background(Color.black.ignoresSafeArea())
@@ -145,36 +167,65 @@ struct movieView: View {
         let image: String
         let rating: Int
         let review: String
-        
+
+        private var currentDate: String {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            return formatter.string(from: Date())
+        }
+
         var body: some View {
             RoundedRectangle(cornerRadius: 16)
                 .foregroundColor(Color("card"))
-                .frame(width: 300, height: 180)
                 .overlay(
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack(alignment: .top) {
-                            Image(image).resizable().frame(width: 38, height: 38).clipShape(Circle())
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(name).foregroundColor(.white).font(.system(size: 13, weight: .medium))
-                                HStack(spacing: 0) {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(image)
+                                .resizable()
+                                .frame(width: 48, height: 48)
+                                .clipShape(Circle())
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(name)
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 14, weight: .semibold))
+
+                                HStack(spacing: 2) {
                                     ForEach(0..<5) { index in
                                         Image(systemName: index < rating ? "star.fill" : "star")
-                                            .font(.subheadline)
+                                            .font(.caption2)
                                             .foregroundColor(Color("bookmark"))
                                     }
                                 }
-                                Text(review).foregroundColor(.white).font(.system(size: 13)).lineLimit(4)
                             }
+
+                            Spacer()
+                        }
+
+                        Text(review)
+                            .foregroundColor(.white)
+                            .font(.system(size: 13))
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Spacer()
+
+                        HStack {
+                            Spacer()
+                            Text(currentDate)
+                                .foregroundColor(.gray)
+                                .font(.system(size: 12))
                         }
                     }
-                        .padding()
+                    .padding(14)
                 )
-                .shadow(radius: 10)
+                .frame(width: 300)
+                .shadow(radius: 5)
         }
     }
 }
 
 #Preview {
-    movieView()
+    moviedetails()
         .preferredColorScheme(.dark)
 }

@@ -23,6 +23,7 @@ struct Movie: Identifiable, Hashable {
     let rating: Double?
     let duration: String?
     
+    // Existing initializer used by the API mapping
     init(from record: AirtableMoviesResponse.Record) {
         self.id = record.id
         self.title = record.fields.name ?? "Untitled"
@@ -30,6 +31,21 @@ struct Movie: Identifiable, Hashable {
         self.genres = record.fields.genre ?? []
         self.rating = record.fields.IMDb_rating
         self.duration = record.fields.runtime
+    }
+    
+    // New convenience initializer for previews, tests, or manual construction
+    init(id: String,
+         title: String,
+         imageURL: URL?,
+         genres: [String],
+         rating: Double?,
+         duration: String?) {
+        self.id = id
+        self.title = title
+        self.imageURL = imageURL
+        self.genres = genres
+        self.rating = rating
+        self.duration = duration
     }
     
     var genreText: String? {
