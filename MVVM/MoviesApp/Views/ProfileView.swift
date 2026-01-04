@@ -146,7 +146,7 @@ struct ProfileView: View {
         .background(Color(.systemBackground))
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showingEditProfile) {
+        .fullScreenCover(isPresented: $showingEditProfile) {
             EditProfileView()
         }
         .task {

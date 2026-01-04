@@ -35,119 +35,170 @@ struct moviescenter: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 28) {
+        ZStack {
+            Color.moviesBackground.ignoresSafeArea()
+            
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 24) {
 
-                // MARK: - Header
-                HStack {
-                    Spacer()
-                    Text("Movies Center")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                    Spacer()
-                    Button {
-                        showingProfile = true
-                    } label: {
-                        ZStack {
-                            if let imageURL = userSession.currentUser?.fields.profile_image,
-                               let url = URL(string: imageURL) {
-                                AsyncImage(url: url) { phase in
-                                    if let image = phase.image {
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                    } else {
-                                        Image("icon")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
+                    // MARK: - Header
+                    HStack(spacing: 0) {
+                        Spacer()
+                        Text("Movies Center")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.white)
+                        Spacer()
+                        Button {
+                            showingProfile = true
+                        } label: {
+                            ZStack {
+                                if let imageURL = userSession.currentUser?.fields.profile_image,
+                                   let url = URL(string: imageURL) {
+                                    AsyncImage(url: url) { phase in
+                                        if let image = phase.image {
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                        } else {
+                                            Circle()
+                                                .fill(Color.gray.opacity(0.3))
+                                            Image(systemName: "person.fill")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundStyle(.white)
+                                        }
                                     }
+                                } else {
+                                    Circle()
+                                        .fill(Color.gray.opacity(0.3))
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(.white)
                                 }
-                            } else {
-                                Image("icon")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
+                            }
+                            .frame(width: 36, height: 36)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.goldAccent, lineWidth: 2))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+
+                    // MARK: - Search Bar
+                    HStack(spacing: 12) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 16))
+                        TextField("Search for Movie name, actors ...", text: $searchText)
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+                            .disableAutocorrection(true)
+                            .autocapitalization(.none)
+                        
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 16))
                             }
                         }
-                        .frame(width: 36, height: 36)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.goldAccent, lineWidth: 2))
                     }
-                    .padding(.trailing, 8)
-                }
-                .padding(.top, 8)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
+                    .background(Color.moviesCard)
+                    .cornerRadius(10)
+                    .padding(.horizontal, 20)
 
-                // MARK: - Search Bar
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    TextField("Search for Movie name, actors ...", text: $searchText)
-                        .foregroundColor(.white)
-                        .font(.system(size: 16))
-                        .disableAutocorrection(true)
-                    Spacer()
-                }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 20)
-                .background(Color.moviesCard)
-                .cornerRadius(12)
-                .padding(.horizontal, 20)
-
-                // MARK: - Loading/Error State
-                if viewModel.isLoading {
-                    ProgressView()
-                        .padding()
-                } else if let error = viewModel.errorMessage {
-                    VStack(spacing: 10) {
-                        Text("Error Loading Movies")
-                            .foregroundColor(.red)
-                            .font(.headline)
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await viewModel.loadMovies() }
+                    // MARK: - Loading/Error State
+                    if viewModel.isLoading {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .tint(.white)
+                            Text("Loading movies...")
+                                .foregroundColor(.gray)
+                                .font(.system(size: 14))
                         }
-                        .foregroundColor(.blue)
-                    }
-                    .padding()
-                } else {
-                    // MARK: - Top Picks (Full-width Carousel)
-                    if !topPicks.isEmpty {
-                        TopPicksCarousel(
-                            movies: topPicks,
-                            currentIndex: $currentTopPick,
-                            onMovieSelect: { selectedMovie = $0 }
-                        )
-                        .padding(.top, 8)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                    } else if let error = viewModel.errorMessage {
+                        VStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 40))
+                                .foregroundColor(.red.opacity(0.8))
+                            Text("Error Loading Movies")
+                                .foregroundColor(.white)
+                                .font(.system(size: 18, weight: .semibold))
+                            Text(error)
+                                .foregroundColor(.gray)
+                                .font(.system(size: 14))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                            Button {
+                                Task { await viewModel.loadMovies() }
+                            } label: {
+                                Text("Retry")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.moviesBackground)
+                                    .padding(.horizontal, 32)
+                                    .padding(.vertical, 12)
+                                    .background(Color.goldAccent)
+                                    .cornerRadius(8)
+                            }
+                            .padding(.top, 8)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                    } else {
+                        // MARK: - Top Picks Carousel
+                        if !topPicks.isEmpty {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Text("High Rated")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                
+                                TabView(selection: $currentTopPick) {
+                                    ForEach(Array(topPicks.enumerated()), id: \.element.id) { idx, movie in
+                                        Button {
+                                            selectedMovie = movie
+                                        } label: {
+                                            TopPickCard(movie: movie)
+                                        }
+                                        .tag(idx)
+                                    }
+                                }
+                                .tabViewStyle(.page(indexDisplayMode: .always))
+                                .indexViewStyle(.page(backgroundDisplayMode: .always))
+                                .frame(height: 280)
+                            }
+                        }
+
+                        // MARK: - Drama Section
+                        if !dramaMovies.isEmpty {
+                            MovieSection(
+                                title: "Drama",
+                                movies: Array(dramaMovies.prefix(10)),
+                                onShowMore: { showingGenre = GenreSheet(id: "Drama") },
+                                onMovieSelect: { selectedMovie = $0 }
+                            )
+                        }
+                        
+                        // MARK: - Comedy Section
+                        if !comedyMovies.isEmpty {
+                            MovieSection(
+                                title: "Comedy",
+                                movies: Array(comedyMovies.prefix(10)),
+                                onShowMore: { showingGenre = GenreSheet(id: "Comedy") },
+                                onMovieSelect: { selectedMovie = $0 }
+                            )
+                        }
                     }
 
-                    // MARK: - Category Sections
-                    if !dramaMovies.isEmpty {
-                        MovieSection(
-                            title: "Drama",
-                            movies: Array(dramaMovies.prefix(3)),
-                            allMovies: dramaMovies,
-                            onShowMore: { showingGenre = GenreSheet(id: "Drama") },
-                            onMovieSelect: { selectedMovie = $0 }
-                        )
-                    }
-                    if !comedyMovies.isEmpty {
-                        MovieSection(
-                            title: "Comedy",
-                            movies: Array(comedyMovies.prefix(3)),
-                            allMovies: comedyMovies,
-                            onShowMore: { showingGenre = GenreSheet(id: "Comedy") },
-                            onMovieSelect: { selectedMovie = $0 }
-                        )
-                    }
+                    Spacer(minLength: 24)
                 }
-
-                Spacer(minLength: 24)
             }
-            .background(Color.moviesBackground.ignoresSafeArea())
         }
-        .background(Color.moviesBackground.ignoresSafeArea())
         .sheet(item: $showingGenre) { genre in
             if genre.id == "Drama" {
                 GenreFullListView(
@@ -167,113 +218,99 @@ struct moviescenter: View {
     }
 }
 
-// MARK: - Top Picks Carousel
-struct TopPicksCarousel: View {
-    let movies: [Movie]
-    @Binding var currentIndex: Int
-    var onMovieSelect: (Movie) -> Void
-
+// MARK: - Top Pick Card
+struct TopPickCard: View {
+    let movie: Movie
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Top Picks")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-
-            TabView(selection: $currentIndex) {
-                ForEach(Array(movies.enumerated()), id: \.element.id) { idx, movie in
-                    Button {
-                        onMovieSelect(movie)
-                    } label: {
-                        ZStack(alignment: .bottomLeading) {
-                            Group {
-                                if let url = movie.imageURL {
-                                    AsyncImage(url: url) { phase in
-                                        if let image = phase.image {
-                                            image
-                                                .resizable()
-                                                .scaledToFill()
-                                        } else if phase.error != nil {
-                                            Color.gray.opacity(0.2)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .font(.title)
-                                                        .foregroundStyle(.secondary)
-                                                )
-                                        } else {
-                                            ProgressView()
-                                        }
-                                    }
-                                } else {
-                                    Color.gray.opacity(0.2)
-                                        .overlay(
-                                            Image(systemName: "photo")
-                                                .font(.title)
-                                                .foregroundStyle(.secondary)
-                                        )
-                                }
-                            }
-                            
-                            // Gradient overlay
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.clear, .black.opacity(0.8)]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 120)
-                            .frame(maxHeight: .infinity, alignment: .bottom)
-                            
-                            // Movie info overlay
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(movie.title)
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .lineLimit(2)
-                                
-                                if let rating = movie.rating {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "star.fill")
-                                            .foregroundColor(.goldAccent)
-                                            .font(.system(size: 14))
-                                        Text(String(format: "%.1f", rating))
-                                            .foregroundColor(.goldAccent)
-                                            .font(.system(size: 15, weight: .semibold))
-                                    }
-                                }
-                                
-                                if let genre = movie.genreText {
-                                    Text(genre)
-                                        .font(.caption)
-                                        .foregroundColor(.white.opacity(0.85))
-                                        .lineLimit(1)
-                                }
-                            }
-                            .padding(16)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+        ZStack(alignment: .bottomLeading) {
+            Group {
+                if let url = movie.imageURL {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } else if phase.error != nil {
+                            Color.gray.opacity(0.2)
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 40))
+                                        .foregroundStyle(.gray)
+                                )
+                        } else {
+                            Color.moviesCard
+                                .overlay(
+                                    ProgressView()
+                                        .tint(.white)
+                                )
                         }
-                        .frame(height: 270)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .shadow(radius: 12, y: 6)
-                        .padding(.horizontal, 20)
                     }
-                    .tag(idx)
+                } else {
+                    Color.gray.opacity(0.2)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.gray)
+                        )
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
-            .frame(height: 290)
+            
+            // Gradient overlay
+            LinearGradient(
+                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.85)]),
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            .frame(height: 140)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            
+            // Movie info
+            VStack(alignment: .leading, spacing: 8) {
+                Text(movie.title)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    if let rating = movie.rating {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.goldAccent)
+                                .font(.system(size: 14))
+                            Text(String(format: "%.1f", rating))
+                                .foregroundColor(.goldAccent)
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                    }
+                    
+                    if let genre = movie.genreText {
+                        Text("• \(genre)")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    
+                    if let duration = movie.duration {
+                        Text("• \(duration)")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(height: 260)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.3), radius: 12, y: 6)
+        .padding(.horizontal, 20)
     }
 }
 
-// MARK: - Movie Section (Horizontal List)
+// MARK: - Movie Section (Horizontal Scroll)
 struct MovieSection: View {
     let title: String
     let movies: [Movie]
-    let allMovies: [Movie]
     let onShowMore: () -> Void
     let onMovieSelect: (Movie) -> Void
 
@@ -281,7 +318,7 @@ struct MovieSection: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(title)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
                 Spacer()
                 Button(action: onShowMore) {
@@ -293,7 +330,7 @@ struct MovieSection: View {
             .padding(.horizontal, 20)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     ForEach(movies) { movie in
                         Button(action: { onMovieSelect(movie) }) {
                             MovieCardView(movie: movie)
@@ -306,7 +343,7 @@ struct MovieSection: View {
     }
 }
 
-// MARK: - Movie Card (Reusable)
+// MARK: - Movie Card
 struct MovieCardView: View {
     let movie: Movie
 
@@ -317,62 +354,66 @@ struct MovieCardView: View {
                     if let image = phase.image {
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .scaledToFill()
                     } else if phase.error != nil {
                         Color.gray.opacity(0.2)
                             .overlay(
                                 Image(systemName: "photo")
-                                    .font(.title2)
-                                    .foregroundStyle(.secondary)
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(.gray)
                             )
                     } else {
-                        ProgressView()
+                        Color.moviesCard
+                            .overlay(
+                                ProgressView()
+                                    .tint(.white)
+                            )
                     }
                 }
             } else {
                 Color.gray.opacity(0.2)
                     .overlay(
                         Image(systemName: "photo")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 24))
+                            .foregroundStyle(.gray)
                     )
             }
+            
             LinearGradient(
-                gradient: Gradient(colors: [Color.clear, .black.opacity(0.8)]),
-                startPoint: .top,
+                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.85)]),
+                startPoint: .center,
                 endPoint: .bottom
             )
-            .frame(height: 70)
+            .frame(height: 60)
             .frame(maxHeight: .infinity, alignment: .bottom)
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(movie.title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(2)
-                    .shadow(radius: 2)
+                
                 if let genre = movie.genreText {
                     Text(genre)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.85))
-                        .shadow(radius: 1)
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.75))
                         .lineLimit(1)
                 }
             }
             .padding(10)
         }
-        .frame(width: 155, height: 210)
+        .frame(width: 140, height: 200)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(radius: 8, y: 4)
+        .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
     }
 }
 
-// MARK: - Genre Sheet (Grid)
+// MARK: - Genre Sheet
 struct GenreSheet: Identifiable, Equatable {
     let id: String
 }
 
-struct GenreFullListView: View, Identifiable {
-    let id = UUID()
+struct GenreFullListView: View {
     let genre: String
     let movies: [Movie]
     let onMovieSelect: (Movie) -> Void
@@ -380,8 +421,8 @@ struct GenreFullListView: View, Identifiable {
     @Environment(\.dismiss) private var dismiss
 
     let columns = [
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14)
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
     ]
 
     var body: some View {
@@ -389,14 +430,15 @@ struct GenreFullListView: View, Identifiable {
             ZStack {
                 Color.moviesBackground.ignoresSafeArea()
 
-                ScrollView(showsIndicators: true) {
-                    LazyVGrid(columns: columns, spacing: 20) {
+                ScrollView(showsIndicators: false) {
+                    LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(movies) { movie in
                             Button(action: {
                                 onMovieSelect(movie)
                                 dismiss()
                             }) {
                                 MovieCardView(movie: movie)
+                                    .frame(width: 165, height: 230)
                             }
                         }
                     }
@@ -408,9 +450,14 @@ struct GenreFullListView: View, Identifiable {
             .navigationTitle(genre)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
-                        .foregroundColor(.goldAccent)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
                 }
             }
             .toolbarBackground(Color.moviesBackground, for: .navigationBar)

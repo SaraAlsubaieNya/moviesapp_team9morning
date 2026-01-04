@@ -1,38 +1,24 @@
-//
-//  EditProfile.swift
-//  MoviesApp
-//
-//  Created by Sara Alsubaie on 04/01/2026.
-//
-
 import SwiftUI
 
 struct EditProfileView: View {
-    @StateObject private var viewModel = MoviesViewModel()
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var userSession = UserSession.shared
-    @Binding var selectedMovie: Movie?
-    @State private var showingEditProfile = false
-
-    private let gridSpacing: CGFloat = 12
-    private let cornerRadius: CGFloat = 10
+    
+    @State private var firstName: String = ""
+    @State private var lastName: String = ""
+    @State private var profileImageURL: String = ""
+    @State private var isSaving: Bool = false
+    @State private var errorMessage: String? = nil
+    @State private var showingSuccess: Bool = false
+    
     private let horizontalPadding: CGFloat = 16
-    private let columnsCount: Int = 2
-    private let fixedItemWidth: CGFloat = 172
-    private let fixedItemHeight: CGFloat = 237
-
+    
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Profile")
-                    .font(.largeTitle.bold())
-                    .padding(.top, 8)
-                    .padding(.horizontal, horizontalPadding)
-
-                // User Profile Card - Tappable
-                Button {
-                    showingEditProfile = true
-                } label: {
-                    HStack(spacing: 12) {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Profile Image Section
+                    VStack(spacing: 16) {
                         ZStack {
                             if let imageURL = userSession.currentUser?.fields.profile_image,
                                let url = URL(string: imageURL) {
@@ -45,123 +31,157 @@ struct EditProfileView: View {
                                         Circle()
                                             .fill(Color(.systemGray4))
                                         Image(systemName: "person.fill")
-                                            .font(.system(size: 22, weight: .semibold))
+                                            .font(.system(size: 40, weight: .semibold))
                                             .foregroundStyle(.white)
                                     }
                                 }
-                                .frame(width: 48, height: 48)
+                                .frame(width: 100, height: 100)
                                 .clipShape(Circle())
                             } else {
                                 Circle()
                                     .fill(Color(.systemGray4))
+                                    .frame(width: 100, height: 100)
                                 Image(systemName: "person.fill")
-                                    .font(.system(size: 22, weight: .semibold))
+                                    .font(.system(size: 40, weight: .semibold))
                                     .foregroundStyle(.white)
                             }
                         }
-                        .frame(width: 48, height: 48)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(userSession.currentUser?.fields.name ?? "User")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(userSession.currentUser?.fields.email ?? "")
+                        .frame(maxWidth: .infinity)
+                        
+                        Text("Edit profile")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                    .padding(.top, 8)
+                    
+                    // Form Fields
+                    VStack(alignment: .leading, spacing: 20) {
+                        // First Name Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("First name")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.primary)
+                            
+                            TextField("", text: $firstName)
+                                .textFieldStyle(.plain)
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(Color(.secondarySystemBackground))
+                                )
                         }
-
-                        Spacer(minLength: 0)
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.secondary)
+                        
+                        // Last Name Field
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Last name")
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            
+                            TextField("", text: $lastName)
+                                .textFieldStyle(.plain)
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(Color(.secondarySystemBackground))
+                                )
+                        }
                     }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(.secondarySystemBackground))
-                    )
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, horizontalPadding)
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Saved movies")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, horizontalPadding)
-
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .padding(.horizontal, horizontalPadding)
-                    } else if let errorMessage = viewModel.errorMessage {
+                    
+                    // Error Message
+                    if let errorMessage = errorMessage {
                         Text(errorMessage)
+                            .font(.subheadline)
                             .foregroundStyle(.red)
-                            .padding(.horizontal, horizontalPadding)
-                    } else {
-                        let columns = Array(
-                            repeating: GridItem(.fixed(fixedItemWidth), spacing: gridSpacing, alignment: .top),
-                            count: columnsCount
-                        )
-
-                        LazyVGrid(columns: columns, alignment: .leading, spacing: gridSpacing) {
-                            ForEach(Array(viewModel.movies.prefix(6))) { movie in
-                                Button(action: {
-                                    selectedMovie = movie
-                                }) {
-                                    ZStack {
-                                        if let url = movie.imageURL {
-                                            AsyncImage(url: url) { phase in
-                                                if let image = phase.image {
-                                                    image
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                } else if phase.error != nil {
-                                                    Color.gray.opacity(0.2)
-                                                        .overlay(
-                                                            Image(systemName: "photo")
-                                                                .font(.title2)
-                                                                .foregroundStyle(.secondary)
-                                                        )
-                                                } else {
-                                                    ProgressView()
-                                                }
-                                            }
-                                        } else {
-                                            Color.gray.opacity(0.2)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .font(.title2)
-                                                        .foregroundStyle(.secondary)
-                                                )
-                                        }
-                                    }
-                                    .frame(width: fixedItemWidth, height: fixedItemHeight)
-                                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                                    .contentShape(Rectangle())
-                                    .accessibilityLabel(Text(movie.title))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal, horizontalPadding)
                     }
+                    
+                    // Success Message
+                    if showingSuccess {
+                        Text("Profile updated successfully!")
+                            .font(.subheadline)
+                            .foregroundStyle(.green)
+                    }
+                    
+                    // Sign Out Button
+                    Button {
+                        UserSession.shared.logout()
+                    } label: {
+                        Text("Sign Out")
+                            .font(.headline)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(Color(.secondarySystemBackground))
+                            )
+                    }
+                    .padding(.top, 8)
+                }
+                .padding(.horizontal, horizontalPadding)
+                .padding(.bottom, 24)
+            }
+            .background(Color(.systemBackground))
+            .navigationTitle("Profile Info")
+            .navigationBarTitleDisplayMode(.inline)
+            .preferredColorScheme(.dark)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        saveProfile()
+                    }
+                    .disabled(isSaving)
                 }
             }
-            .padding(.bottom, 24)
         }
-        .background(Color(.systemBackground))
-        .navigationBarTitleDisplayMode(.inline)
-        .preferredColorScheme(.dark)
-        .sheet(isPresented: $showingEditProfile) {
-            EditProfileView()
+        .onAppear {
+            loadCurrentUserData()
         }
-        .task {
-            await viewModel.loadMovies()
+    }
+    
+    private func loadCurrentUserData() {
+        guard let user = userSession.currentUser else { return }
+        
+        // Split the name into first and last name
+        let nameParts = (user.fields.name ?? "").split(separator: " ")
+        firstName = String(nameParts.first ?? "")
+        lastName = nameParts.count > 1 ? nameParts.dropFirst().joined(separator: " ") : ""
+        
+        profileImageURL = user.fields.profile_image ?? ""
+    }
+    
+    private func saveProfile() {
+        errorMessage = nil
+        showingSuccess = false
+        isSaving = true
+        
+        let fullName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
+        
+        Task {
+            defer { isSaving = false }
+            do {
+                try await userSession.updateUser(
+                    name: fullName,
+                    email: nil, // Keep email unchanged
+                    profileImage: profileImageURL.isEmpty ? nil : profileImageURL
+                )
+                showingSuccess = true
+                
+                // Dismiss after a short delay
+                try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                dismiss()
+            } catch {
+                errorMessage = "Failed to update profile: \(error.localizedDescription)"
+            }
         }
     }
 }
 
 #Preview {
-    ProfileView(selectedMovie: .constant(nil))
+    EditProfileView()
 }
