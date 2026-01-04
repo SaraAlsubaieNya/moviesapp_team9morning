@@ -9,7 +9,7 @@ struct AppRootView: View {
     var body: some View {
         NavigationStack {
             if !isSignedIn {
-                // Use the SignInView from signin.swift
+                
                 SignInView(onSignIn: {
                     isSignedIn = true
                 })
@@ -29,7 +29,7 @@ struct AppRootView: View {
                         }
                         .sheet(isPresented: $showingProfile) {
                             NavigationStack {
-                                ProfileView()
+                                ProfileView(selectedMovie: $selectedMovie)
                                     .toolbar {
                                         ToolbarItem(placement: .cancellationAction) {
                                             Button("Close") { showingProfile = false }

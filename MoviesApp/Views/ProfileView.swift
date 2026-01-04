@@ -136,6 +136,5 @@ struct ProfileView: View {
 }
 
 #Preview {
-    // Provide a dummy binding for previews
     ProfileView(selectedMovie: .constant(nil))
 }
