@@ -35,11 +35,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4796BD912EFA770B00FB1DBB /* MoviesApp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MoviesApp;
-			sourceTree = "<group>";
-		};
 		4796BDA12EFA770C00FB1DBB /* MoviesAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = MoviesAppTests;
@@ -48,6 +43,11 @@
 		4796BDAB2EFA770C00FB1DBB /* MoviesAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = MoviesAppUITests;
+			sourceTree = "<group>";
+		};
+		47B1C4E32F0A53A00067483B /* MVVM */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MVVM;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -80,7 +80,7 @@
 		4796BD862EFA770B00FB1DBB = {
 			isa = PBXGroup;
 			children = (
-				4796BD912EFA770B00FB1DBB /* MoviesApp */,
+				47B1C4E32F0A53A00067483B /* MVVM */,
 				4796BDA12EFA770C00FB1DBB /* MoviesAppTests */,
 				4796BDAB2EFA770C00FB1DBB /* MoviesAppUITests */,
 				4796BD902EFA770B00FB1DBB /* Products */,
@@ -114,7 +114,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4796BD912EFA770B00FB1DBB /* MoviesApp */,
+				47B1C4E32F0A53A00067483B /* MVVM */,
 			);
 			name = MoviesApp;
 			packageProductDependencies = (
