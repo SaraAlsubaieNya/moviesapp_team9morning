@@ -162,13 +162,7 @@ struct TopPicksCarousel: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
                 Spacer()
-                if movies.indices.contains(currentIndex) {
-                    Text(movies[currentIndex].title)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.goldAccent)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
+                // Removed top-right movie title to match Figma
             }
             .padding(.horizontal, 20)
 
