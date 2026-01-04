@@ -1,40 +1,39 @@
 import SwiftUI
 
 struct SignInView: View {
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var isPasswordVisible: Bool = false
-    
+    @ObservedObject var viewModel: SignInViewModel = .init()
+    var onSignIn: (() -> Void)? = nil
+
     var body: some View {
         ZStack(alignment: .bottom) {
             Image("Sign in background")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
-            
+
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
-            
+
             VStack(alignment: .leading, spacing: 36) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Sign in")
                         .font(.system(size: 48, weight: .bold))
                         .foregroundColor(.white)
                         .tracking(-1)
-                    
+
                     Text("You'll find what you're looking for in the ocean of movies")
                         .font(.system(size: 16))
                         .foregroundColor(Color(white: 0.7))
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Email")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.white)
-                        
-                        TextField("", text: $email, prompt: Text("Enter your email").foregroundColor(Color.white.opacity(0.4)))
+
+                        TextField("", text: $viewModel.email, prompt: Text("Enter your email").foregroundColor(Color.white.opacity(0.4)))
                             .font(.system(size: 16))
                             .foregroundColor(.white)
                             .padding(.horizontal, 16)
@@ -49,28 +48,28 @@ struct SignInView: View {
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Password")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.white)
-                        
+
                         HStack(spacing: 0) {
                             Group {
-                                if isPasswordVisible {
-                                    TextField("", text: $password, prompt: Text("Enter your password").foregroundColor(Color.white.opacity(0.4)))
+                                if viewModel.isPasswordVisible {
+                                    TextField("", text: $viewModel.password, prompt: Text("Enter your password").foregroundColor(Color.white.opacity(0.4)))
                                 } else {
-                                    SecureField("", text: $password, prompt: Text("Enter your password").foregroundColor(Color.white.opacity(0.4)))
+                                    SecureField("", text: $viewModel.password, prompt: Text("Enter your password").foregroundColor(Color.white.opacity(0.4)))
                                 }
                             }
                             .font(.system(size: 16))
                             .foregroundColor(.white)
                             .textContentType(.password)
-                            
+
                             Button(action: {
-                                isPasswordVisible.toggle()
+                                viewModel.isPasswordVisible.toggle()
                             }) {
-                                Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                Image(systemName: viewModel.isPasswordVisible ? "eye.slash.fill" : "eye.fill")
                                     .font(.system(size: 16))
                                     .foregroundColor(Color.white.opacity(0.5))
                                     .frame(width: 44, height: 44)
@@ -87,19 +86,37 @@ struct SignInView: View {
                         .cornerRadius(6)
                     }
                 }
-                
+
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.footnote)
+                        .padding(.top, -8)
+                }
+
                 Button(action: {
-                    signIn()
+                    viewModel.signIn { success in
+                        if success {
+                            onSignIn?()
+                        }
+                    }
                 }) {
-                    Text("Sign in")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(Color(red: 245/255, green: 200/255, blue: 66/255))
-                        .cornerRadius(6)
+                    if viewModel.isSigningIn {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                    } else {
+                        Text("Sign in")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(Color(red: 245/255, green: 200/255, blue: 66/255))
+                            .cornerRadius(6)
+                    }
                 }
                 .padding(.top, 12)
+                .disabled(viewModel.isSigningIn)
             }
             .padding(.horizontal, 48)
             .padding(.vertical, 56)
@@ -116,12 +133,10 @@ struct SignInView: View {
             .padding(.bottom, 60)
         }
     }
-    
-    func signIn() {
-        onSignIn?()
-    }
 }
 
-#Preview {
-    SignInView()
+struct SignInView_Previews: PreviewProvider {
+    static var previews: some View {
+        SignInView()
+    }
 }
