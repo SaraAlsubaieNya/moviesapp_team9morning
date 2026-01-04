@@ -10,6 +10,7 @@ extension Color {
 // MARK: - Main View
 struct moviescenter: View {
     @StateObject private var viewModel = MoviesViewModel()
+    @ObservedObject var userSession = UserSession.shared
     @State private var searchText: String = ""
     @State private var currentTopPick = 0
     @State private var showingGenre: GenreSheet? = nil
@@ -47,12 +48,29 @@ struct moviescenter: View {
                     Button {
                         showingProfile = true
                     } label: {
-                        Image("icon")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 36, height: 36)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.goldAccent, lineWidth: 2))
+                        ZStack {
+                            if let imageURL = userSession.currentUser?.fields.profile_image,
+                               let url = URL(string: imageURL) {
+                                AsyncImage(url: url) { phase in
+                                    if let image = phase.image {
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    } else {
+                                        Image("icon")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                    }
+                                }
+                            } else {
+                                Image("icon")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            }
+                        }
+                        .frame(width: 36, height: 36)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.goldAccent, lineWidth: 2))
                     }
                     .padding(.trailing, 8)
                 }
@@ -162,12 +180,11 @@ struct TopPicksCarousel: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
                 Spacer()
-                // Removed top-right movie title to match Figma
             }
             .padding(.horizontal, 20)
 
             TabView(selection: $currentIndex) {
-                ForEach(Array(movies.enumerated()), id: \.1.id) { idx, movie in
+                ForEach(Array(movies.enumerated()), id: \.element.id) { idx, movie in
                     Button {
                         onMovieSelect(movie)
                     } label: {
@@ -199,7 +216,8 @@ struct TopPicksCarousel: View {
                                         )
                                 }
                             }
-                            // --- Overlay is ALWAYS visible, regardless of image state ---
+                            
+                            // Gradient overlay
                             LinearGradient(
                                 gradient: Gradient(colors: [Color.clear, .black.opacity(0.8)]),
                                 startPoint: .top,
@@ -207,10 +225,14 @@ struct TopPicksCarousel: View {
                             )
                             .frame(height: 120)
                             .frame(maxHeight: .infinity, alignment: .bottom)
+                            
+                            // Movie info overlay
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(movie.title)
                                     .font(.system(size: 18, weight: .bold))
                                     .foregroundColor(.white)
+                                    .lineLimit(2)
+                                
                                 if let rating = movie.rating {
                                     HStack(spacing: 4) {
                                         Image(systemName: "star.fill")
@@ -221,26 +243,28 @@ struct TopPicksCarousel: View {
                                             .font(.system(size: 15, weight: .semibold))
                                     }
                                 }
+                                
                                 if let genre = movie.genreText {
                                     Text(genre)
                                         .font(.caption)
                                         .foregroundColor(.white.opacity(0.85))
+                                        .lineLimit(1)
                                 }
                             }
                             .padding(16)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: 120, alignment: .bottom)
                         }
                         .frame(height: 270)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .shadow(radius: 12, y: 6)
                         .padding(.horizontal, 20)
-                        .tag(idx)
                     }
+                    .tag(idx)
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .automatic))
-            .frame(height: 270)
+            .tabViewStyle(.page(indexDisplayMode: .always))
+            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .frame(height: 290)
         }
     }
 }
@@ -271,7 +295,6 @@ struct MovieSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(movies) { movie in
-                        // Wrap MovieCardView in Button to ensure tap anywhere works
                         Button(action: { onMovieSelect(movie) }) {
                             MovieCardView(movie: movie)
                         }

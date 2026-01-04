@@ -1,17 +1,16 @@
 import SwiftUI
 
 struct AppRootView: View {
-    @State private var isSignedIn = false
+    @StateObject private var userSession = UserSession.shared
     @State private var selectedMovie: Movie? = nil
     @State private var showingProfile = false
     @State private var showingAddReview = false
 
     var body: some View {
         NavigationStack {
-            if !isSignedIn {
-                
+            if !userSession.isLoggedIn {
                 SignInView(onSignIn: {
-                    isSignedIn = true
+                    // The sign in is handled by UserSession now
                 })
                 .navigationBarBackButtonHidden(true)
             } else {
@@ -50,6 +49,10 @@ struct AppRootView: View {
                 }
                 .navigationBarBackButtonHidden(true)
             }
+        }
+        .task {
+            // Try to restore previous session on app launch
+            await userSession.restoreSession()
         }
     }
 }

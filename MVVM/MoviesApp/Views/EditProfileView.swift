@@ -1,6 +1,13 @@
+//
+//  EditProfile.swift
+//  MoviesApp
+//
+//  Created by Sara Alsubaie on 04/01/2026.
+//
+
 import SwiftUI
 
-struct ProfileView: View {
+struct EditProfileView: View {
     @StateObject private var viewModel = MoviesViewModel()
     @ObservedObject var userSession = UserSession.shared
     @Binding var selectedMovie: Movie?
