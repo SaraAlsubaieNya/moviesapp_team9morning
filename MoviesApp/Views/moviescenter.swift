@@ -172,32 +172,34 @@ struct TopPicksCarousel: View {
                         onMovieSelect(movie)
                     } label: {
                         ZStack(alignment: .bottomLeading) {
-                            if let url = movie.imageURL {
-                                AsyncImage(url: url) { phase in
-                                    if let image = phase.image {
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                    } else if phase.error != nil {
-                                        Color.gray.opacity(0.2)
-                                            .overlay(
-                                                Image(systemName: "photo")
-                                                    .font(.title)
-                                                    .foregroundStyle(.secondary)
-                                            )
-                                    } else {
-                                        ProgressView()
+                            Group {
+                                if let url = movie.imageURL {
+                                    AsyncImage(url: url) { phase in
+                                        if let image = phase.image {
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                        } else if phase.error != nil {
+                                            Color.gray.opacity(0.2)
+                                                .overlay(
+                                                    Image(systemName: "photo")
+                                                        .font(.title)
+                                                        .foregroundStyle(.secondary)
+                                                )
+                                        } else {
+                                            ProgressView()
+                                        }
                                     }
+                                } else {
+                                    Color.gray.opacity(0.2)
+                                        .overlay(
+                                            Image(systemName: "photo")
+                                                .font(.title)
+                                                .foregroundStyle(.secondary)
+                                        )
                                 }
-                            } else {
-                                Color.gray.opacity(0.2)
-                                    .overlay(
-                                        Image(systemName: "photo")
-                                            .font(.title)
-                                            .foregroundStyle(.secondary)
-                                    )
                             }
-                            // Gradient and Info Overlay
+                            // --- Overlay is ALWAYS visible, regardless of image state ---
                             LinearGradient(
                                 gradient: Gradient(colors: [Color.clear, .black.opacity(0.8)]),
                                 startPoint: .top,
@@ -226,6 +228,8 @@ struct TopPicksCarousel: View {
                                 }
                             }
                             .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(height: 120, alignment: .bottom)
                         }
                         .frame(height: 270)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -267,8 +271,10 @@ struct MovieSection: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(movies) { movie in
-                        MovieCardView(movie: movie)
-                            .onTapGesture { onMovieSelect(movie) }
+                        // Wrap MovieCardView in Button to ensure tap anywhere works
+                        Button(action: { onMovieSelect(movie) }) {
+                            MovieCardView(movie: movie)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -363,11 +369,12 @@ struct GenreFullListView: View, Identifiable {
                 ScrollView(showsIndicators: true) {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(movies) { movie in
-                            MovieCardView(movie: movie)
-                                .onTapGesture {
-                                    onMovieSelect(movie)
-                                    dismiss()
-                                }
+                            Button(action: {
+                                onMovieSelect(movie)
+                                dismiss()
+                            }) {
+                                MovieCardView(movie: movie)
+                            }
                         }
                     }
                     .padding(.horizontal, 20)

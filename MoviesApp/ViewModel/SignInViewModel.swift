@@ -14,7 +14,9 @@ final class SignInViewModel: ObservableObject {
     // Simulated sign-in; replace with your authentication logic
     func signIn(completion: @escaping (Bool) -> Void) {
         errorMessage = nil
-        guard !email.isEmpty, !password.isEmpty else {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPassword = password 
+        guard !trimmedEmail.isEmpty, !trimmedPassword.isEmpty else {
             errorMessage = "Email and password required."
             completion(false)
             return
@@ -25,9 +27,13 @@ final class SignInViewModel: ObservableObject {
             defer { self.isSigningIn = false }
             do {
                 let users = try await UserService.shared.fetchUsers()
+                let inputEmail = trimmedEmail.lowercased()
+                let inputPassword = trimmedPassword
+
                 if users.first(where: {
-                    ($0.fields.email?.caseInsensitiveCompare(self.email) == .orderedSame) &&
-                    ($0.fields.password ?? "") == self.password
+                    let recordEmail = $0.fields.email?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    let recordPassword = $0.fields.password ?? ""
+                    return recordEmail == inputEmail && recordPassword == inputPassword
                 }) != nil {
                     // Successful login
                     completion(true)
