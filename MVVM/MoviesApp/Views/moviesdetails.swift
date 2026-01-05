@@ -126,15 +126,22 @@ struct moviedetails: View {
             .padding(.horizontal, 30)
             
             // الكاردز حق التعليقات
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    ReviewCard(name: "Afnan Abdullah", image: "afnan", rating: 3, review: "This is an engagingly simple, good-hearted film, with just enough darkness around the edges to give contrast and relief to its glowingly benign view of human nature.")
-                    ReviewCard(name: "Sarah Ahmad", image: "sarahahmed", rating: 4, review: "A tough, complex story [told] with clarity, compassion and considerable dramatic force.")
-                    ReviewCard(name: "Abdullah Sharif", image: "abdullahsharif", rating: 3, review: "It doesn't matter how we think we remember the moments, how they look now, in this edition, will force a shift in memory that we'll most likely be grateful for.")
+            ZStack {
+                Color.moviesCard
+                    .cornerRadius(20)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ReviewCard(name: "Afnan Abdullah", image: "afnan", rating: 3, review: "This is an engagingly simple, good-hearted film, with just enough darkness around the edges to give contrast and relief to its glowingly benign view of human nature.")
+                        ReviewCard(name: "Sarah Ahmad", image: "sarahahmed", rating: 4, review: "A tough, complex story [told] with clarity, compassion and considerable dramatic force.")
+                        ReviewCard(name: "Abdullah Sharif", image: "abdullahsharif", rating: 3, review: "It doesn't matter how we think we remember the moments, how they look now, in this edition, will force a shift in memory that we'll most likely be grateful for.")
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
+                .frame(height: 200)
             }
             .frame(height: 200)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
             
             Button(action: {
                 showingAddReview = true
@@ -195,7 +202,7 @@ struct moviedetails: View {
 
         var body: some View {
             RoundedRectangle(cornerRadius: 16)
-                .foregroundColor(Color("card"))
+                .foregroundColor(Color.moviesCard)
                 .overlay(
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .top, spacing: 12) {
