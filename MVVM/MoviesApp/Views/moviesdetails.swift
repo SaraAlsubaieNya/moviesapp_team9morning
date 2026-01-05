@@ -3,7 +3,8 @@ import SwiftUI
 struct moviedetails: View {
     let movie: Movie
     @Binding var showingAddReview: Bool // <--- for navigation to AddReviewView
-    
+    @ObservedObject private var userSession = UserSession.shared
+
     var body: some View {
         ScrollView {
             // الهيدر
@@ -173,6 +174,29 @@ struct moviedetails: View {
         .toolbarBackground(Color("navigationbar"), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                // Share
+                ShareLink(
+                    item: movie.title,
+                    subject: Text(movie.title),
+                    message: Text("Check out this movie!")
+                ) {
+                    Image("share")
+                }
+
+                // Save / Bookmark
+                Button {
+                    userSession.toggleSave(movie: movie)
+                } label: {
+                    Image(
+                        userSession.isMovieSaved(movie)
+                        ? "bookmarked"
+                        : "bookmarking"
+                    )
+                }
+            }
+        }
     }
     
     // عرض النجوم

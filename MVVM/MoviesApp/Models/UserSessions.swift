@@ -8,8 +8,29 @@ class UserSession: ObservableObject {
     
     @Published var currentUser: AirtableUsersResponse.Record?
     @Published var isLoggedIn: Bool = false
+    @Published var savedMovieIDs: Set<String> = [] {
+        didSet {
+            UserDefaults.standard.set(Array(savedMovieIDs), forKey: "savedMovieIDs")
+        }
+    }
     
-    private init() {}
+    private init() {
+        if let saved = UserDefaults.standard.array(forKey: "savedMovieIDs") as? [String] {
+            self.savedMovieIDs = Set(saved)
+        }
+    }
+        
+    func isMovieSaved(_ movie: Movie) -> Bool {
+        savedMovieIDs.contains(movie.id)
+    }
+
+    func toggleSave(movie: Movie) {
+        if savedMovieIDs.contains(movie.id) {
+            savedMovieIDs.remove(movie.id)
+        } else {
+            savedMovieIDs.insert(movie.id)
+        }
+    }
     
     func login(user: AirtableUsersResponse.Record) {
         self.currentUser = user

@@ -98,43 +98,31 @@ struct ProfileView: View {
                         )
 
                         LazyVGrid(columns: columns, alignment: .leading, spacing: gridSpacing) {
-                            ForEach(Array(viewModel.movies.prefix(6))) { movie in
-                                Button(action: {
-                                    selectedMovie = movie
-                                }) {
-                                    ZStack {
-                                        if let url = movie.imageURL {
-                                            AsyncImage(url: url) { phase in
-                                                if let image = phase.image {
-                                                    image
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                } else if phase.error != nil {
-                                                    Color.gray.opacity(0.2)
-                                                        .overlay(
-                                                            Image(systemName: "photo")
-                                                                .font(.title2)
-                                                                .foregroundStyle(.secondary)
-                                                        )
-                                                } else {
-                                                    ProgressView()
-                                                }
+                            let savedMovies = viewModel.movies.filter {
+                                userSession.savedMovieIDs.contains($0.id)
+                            }
+
+                            if savedMovies.isEmpty {
+                                Text("No saved movies yet")
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, horizontalPadding)
+                            } else {
+                                ForEach(savedMovies) { movie in
+                                    Button {
+                                        selectedMovie = movie
+                                    } label: {
+                                        AsyncImage(url: movie.imageURL) { phase in
+                                            if let image = phase.image {
+                                                image.resizable().scaledToFill()
+                                            } else {
+                                                Color.gray.opacity(0.2)
                                             }
-                                        } else {
-                                            Color.gray.opacity(0.2)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .font(.title2)
-                                                        .foregroundStyle(.secondary)
-                                                )
                                         }
+                                        .frame(width: fixedItemWidth, height: fixedItemHeight)
+                                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
                                     }
-                                    .frame(width: fixedItemWidth, height: fixedItemHeight)
-                                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                                    .contentShape(Rectangle())
-                                    .accessibilityLabel(Text(movie.title))
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.horizontal, horizontalPadding)
@@ -158,3 +146,4 @@ struct ProfileView: View {
 #Preview {
     ProfileView(selectedMovie: .constant(nil))
 }
+
