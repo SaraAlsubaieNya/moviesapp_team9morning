@@ -3,19 +3,19 @@ This project is a SwiftUI-based Movie application that follows the MVVM (Modelâ€
 The app fetches movie data from an external API (Airtable), displays movie information, and manages user authentication state. The goal of the project is to demonstrate clean architecture, API integration, and proper error handling with user feedback.
 CRUD Operations & API Integration
 The application integrates with an external API using URLSession and modern Swift concurrency (async/await). Networking logic is isolated in a dedicated service layer to maintain separation of concerns.
-# Read (Implemented)
+# Read 
 Movie data is fetched from the Airtable API.
 The MoviesService handles HTTP requests, response validation, and JSON decoding.
 API responses are decoded into Swift models using Codable.
 Fetched movies are stored in the MoviesViewModel and displayed in the UI.
 This is the primary CRUD operation used in the app.
-# Create (Limited)
+# Create 
 The app supports user authentication by validating user data retrieved from the API.
 Login information is processed and stored as session state.
-# Update (Not Implemented)
+# Update 
 Updating movie data is not included in this version of the app.
 The architecture supports future expansion to include update operations if needed.
-# Delete (Not Implemented)
+# Delete 
 Deleting movies or user data is not part of the current app scope.
 # API Integration Details
 The app uses URLSession for networking, which is Appleâ€™s standard and secure API for handling HTTP requests.
